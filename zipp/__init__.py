@@ -391,9 +391,13 @@ class Path:
 
     def is_symlink(self):
         """
-        Return whether this path is a symlink. Always false (python/cpython#82102).
+        Return whether this path is a symlink.
         """
-        return False
+        with zipfile.ZipFile(self.root.filename) as zf:
+            info = zf.getinfo(self.at)
+            # Check for symlink using external attributes
+            is_symlink = (info.external_attr >> 16) & 0o170000 == 0o120000
+        return is_symlink
 
     def glob(self, pattern):
         if not pattern:
